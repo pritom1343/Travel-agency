@@ -1,17 +1,22 @@
-from flask import Flask, render_template, redirect, url_for, flash, request
+from flask import Flask, render_template, redirect, url_for, flash, request 
 from config import Config
 from models import db, User
 from forms import RegistrationForm, LoginForm
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config.from_object(Config)
 
 db.init_app(app)
+migrate = Migrate(app, db)
 bcrypt = Bcrypt(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+# ... rest of your code ...
+
 
 @login_manager.user_loader
 def load_user(user_id):
