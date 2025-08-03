@@ -1,0 +1,139 @@
+/* ---------------------- COLOR VARIABLES ---------------------- */
+:root {
+    --bg-color: #f8f9fa;
+    --text-color: #212529;
+    --nav-bg: #343a40;
+    --card-bg: #ffffff;
+    --card-border: #dee2e6;
+    --alert-bg: #e9ecef;
+    --alert-text: #212529;
+    --link-color: #0d6efd;
+    --form-bg: #ffffff;
+    --form-border: #ced4da;
+    --form-placeholder: #6c757d;
+    --btn-bg: #0d6efd;
+    --btn-border: #0d6efd;
+}
+
+/* Dark mode overrides */
+body.dark-mode {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --nav-bg: #1f1f1f;
+    --card-bg: #1e1e1e;
+    --card-border: #333;
+    --alert-bg: #2c2c2c;
+    --alert-text: #f1f1f1;
+    --link-color: #90caf9;
+    --form-bg: #2a2a2a;
+    --form-border: #444;
+    --form-placeholder: #aaaaaa;
+    --btn-bg: #3a3a3a;
+    --btn-border: #555;
+}
+
+/* ---------------------- GLOBAL STYLES ---------------------- */
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+nav {
+    background-color: var(--nav-bg);
+    padding: 10px;
+}
+nav a {
+    color: white;
+    margin-right: 15px;
+    text-decoration: none;
+}
+
+.container {
+    padding: 20px;
+}
+
+.flash.success {
+    background-color: lightgreen;
+    color: green;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+.flash.danger {
+    background-color: #ffcccc;
+    color: red;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+}
+
+/* ---------------------- FORM CARD ---------------------- */
+.form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 0;
+}
+
+.form-card {
+    background-color: var(--card-bg);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid var(--card-border);
+    transition: background-color 0.3s, border 0.3s;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--form-border);
+    background-color: var(--form-bg);
+    color: var(--text-color);
+    border-radius: 6px;
+    font-size: 16px;
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+.form-input::placeholder {
+    color: var(--form-placeholder);
+}
+
+.form-button {
+    width: 100%;
+    padding: 10px;
+    background-color: var(--btn-bg);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.form-button:hover {
+    background-color: var(--btn-border);
+}
+
+.switch-theme {
+    margin-top: 10px;
+    text-align: center;
+}
+.switch-theme button {
+    padding: 6px 12px;
+    background: transparent;
+    border: 1px solid var(--form-border);
+    border-radius: 6px;
+    color: var(--text-color);
+    cursor: pointer;
+}
