@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="admin-dashboard">
+    <h1>Admin Dashboard</h1>
+    <div class="dashboard-cards">
+       <a href="{{ url_for('manage_users') }}" class="card-link">
+    <div class="card">
+        <h2>Users</h2>
+        <p>Manage users, view analytics, and more.</p>
+    </div>
+</a>
+        <div class="card">
+            <h2>Tour Packages</h2>
+            <p>View, add, or edit tour packages.</p>
+            <a href="{{ url_for('admin_tour_packages') }}" class="btn btn-primary">Manage Tour Packages</a>
+        </div>
+        <div class="card">
+            <h2>Bookings</h2>
+            <p>Review and manage all travel bookings.</p>
+        </div>
+        <div class="card">
+            <h2>Packages</h2>
+            <p>Create or update tour packages.</p>
+        </div>
+    </div>
+    <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+</div>
+{% endblock %}

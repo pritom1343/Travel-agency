@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="edit-profile-container">
+    <h2 class="edit-profile-title">Edit Your Profile</h2>
+
+    <form method="POST" class="edit-profile-form">
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+            {{ form.full_name.label }}<br>
+            {{ form.full_name(class="form-input") }}
+        </div>
+
+        <div class="form-group">
+            {{ form.age.label }}<br>
+            {{ form.age(class="form-input") }}
+        </div>
+
+        <div class="form-group">
+            {{ form.gender.label }}<br>
+            {{ form.gender(class="form-input") }}
+        </div>
+
+        <div class="form-group">
+            {{ form.occupation.label }}<br>
+            {{ form.occupation(class="form-input") }}
+        </div>
+
+        <div class="form-group">
+            {{ form.education.label }}<br>
+            {{ form.education(class="form-input") }}
+        </div>
+
+        <button type="submit" class="btn-save">Save Changes</button>
+        <a href="{{ url_for('user_dashboard') }}" class="btn-cancel">Cancel</a>
+
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="dashboard-container">
+    <div class="background-image">
+        <div class="overlay-buttons">
+            <a href="{{ url_for('register') }}" class="btn btn-register">Register</a>
+            <a href="{{ url_for('login') }}" class="btn btn-login">Login</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

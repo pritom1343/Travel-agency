@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h2 class="dashboard-title">Welcome, {{ user.full_name or user.username }}!</h2>
+
+    <div class="user-card">
+      
+        <a href="{{ url_for('edit_profile') }}" class="btn-edit">Edit Profile</a>
+
+
+        <h3 class="section-title">User Profile</h3>
+        <div class="user-info">
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            <p><strong>Full Name:</strong> {{ user.full_name }}</p>
+            <p><strong>Age:</strong> {{ user.age }}</p>
+            <p><strong>Gender:</strong> {{ user.gender }}</p>
+            <p><strong>Occupation:</strong> {{ user.occupation }}</p>
+            <p><strong>Education:</strong> {{ user.education }}</p>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Add Tour Package</h2>
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        {{ form.title.label }} {{ form.title(class="form-control") }}
+        {{ form.description.label }} {{ form.description(class="form-control") }}
+        {{ form.price.label }} {{ form.price(class="form-control") }}
+        {{ form.location.label }} {{ form.location(class="form-control") }}
+        {{ form.duration.label }} {{ form.duration(class="form-control") }}
+        {{ form.members.label }} {{ form.members(class="form-control") }}
+        {{ form.facilities.label }} {{ form.facilities(class="form-control") }}
+        {{ form.hotel_name.label }} {{ form.hotel_name(class="form-control") }}
+        {{ form.room_type.label }} {{ form.room_type(class="form-control") }}
+        {{ form.number_of_rooms.label }} {{ form.number_of_rooms(class="form-control") }}
+        {{ form.transportation_details.label }} {{ form.transportation_details(class="form-control") }}
+        {{ form.tour_type.label }} {{ form.tour_type(class="form-control") }}
+        {{ form.image_file.label }} {{ form.image_file(class="form-control") }}
+        <br>
+        {{ form.submit(class="btn btn-success") }}
+    </form>
+</div>
+{% endblock %}

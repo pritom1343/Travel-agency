@@ -7,20 +7,32 @@
 </head>
 <body>
     <nav>
-        <a href="{{ url_for('index') }}">Home</a>
+       <a href="{{ url_for('home') }}">Home</a>
         {% if current_user.is_authenticated %}
             <a href="{{ url_for('logout') }}">Logout</a>
+            {% if current_user.is_admin %}
+                <a href="{{ url_for('dashboard') }}">Admin Dashboard</a>  
+            {% else %}
+                <a href="{{ url_for('user_dashboard') }}">User Dashboard</a>  
+            {% endif %}
         {% else %}
             <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('admin_login') }}">Admin Login</a>
             <a href="{{ url_for('register') }}">Register</a>
         {% endif %}
     </nav>
-    <div class="container">
+    <div class="container {% if request.endpoint == 'home' %}no-container{% endif %}">
+
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% for category, message in messages %}
-                <div class="flash {{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endwith %}
+    {% for category, message in messages %}
+        <div class="flash {{ category }}">
+            {{ message }}
+        
+            <button class="close-btn" onclick="this.parentElement.style.display='none';">&times;</button>
+        </div>
+    {% endfor %}
+{% endwith %}
+
         <p class="switch-theme">
             <button onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
         </p>

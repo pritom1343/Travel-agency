@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Admin - Tour Packages</h2>
+    <a href="{{ url_for('add_tour_package') }}" class="btn btn-primary mb-3">+ Add New Package</a>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Location</th>
+                <th>Price</th>
+                <th>Duration</th>
+                <th>Members</th>
+                <th>Tour Type</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for package in packages %}
+            <tr>
+                <td>{{ package.title }}</td>
+                <td>{{ package.location }}</td>
+                <td>${{ package.price }}</td>
+                <td>{{ package.duration }}</td>
+                <td>{{ package.members }}</td>
+                <td>{{ package.tour_type }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
