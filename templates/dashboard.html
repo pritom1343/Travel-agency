@@ -1,28 +1,73 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="admin-dashboard">
-    <h1>Admin Dashboard</h1>
-    <div class="dashboard-cards">
-       <a href="{{ url_for('manage_users') }}" class="card-link">
-    <div class="card">
-        <h2>Users</h2>
-        <p>Manage users, view analytics, and more.</p>
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Admin Dashboard</h1>
+
+    <!-- Top Action: Update Wallpaper -->
+    <div class="text-center mb-4">
+        <a href="{{ url_for('admin_home_image') }}" class="btn btn-lg btn-primary">
+            🖼️ Update Homepage Wallpaper
+        </a>
     </div>
-</a>
-        <div class="card">
-            <h2>Tour Packages</h2>
-            <p>View, add, or edit tour packages.</p>
-            <a href="{{ url_for('admin_tour_packages') }}" class="btn btn-primary">Manage Tour Packages</a>
+
+    <!-- Dashboard Cards -->
+    <div class="row g-4">
+        <!-- Manage Users -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <h4 class="card-title">👤 User Management</h4>
+                    <p class="card-text">Manage registered users and view analytics.</p>
+                    <a href="{{ url_for('manage_users') }}" class="btn btn-outline-primary">
+                        Manage Users
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="card">
-            <h2>Bookings</h2>
-            <p>Review and manage all travel bookings.</p>
+
+        <!-- Tour Packages -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <h4 class="card-title">🌍 Tour Packages</h4>
+                    <p class="card-text">Add, edit, and manage available travel packages.</p>
+                    <a href="{{ url_for('admin_tour_packages') }}" class="btn btn-outline-success">
+                        Manage Packages
+                    </a>
+                </div>
+            </div>
         </div>
-        <div class="card">
-            <h2>Packages</h2>
-            <p>Create or update tour packages.</p>
+
+        <!-- Confirmed Bookings -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <h4 class="card-title">📑 Confirmed Bookings</h4>
+                    <p class="card-text">View and manage all confirmed bookings.</p>
+                    <a href="{{ url_for('admin_bookings') }}" class="btn btn-outline-info">
+                        View Bookings
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Trips -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm h-100 text-center">
+                <div class="card-body">
+                    <h4 class="card-title">✈️ Custom Trips</h4>
+                    <p class="card-text">Review and approve/reject custom trip requests.</p>
+                    <a href="{{ url_for('admin_custom_trips') }}" class="btn btn-outline-warning">
+                        Manage Custom Trips
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-    <a href="{{ url_for('logout') }}" class="btn-logout">Logout</a>
+
+    <!-- Logout -->
+    <div class="text-center mt-5">
+        <a href="{{ url_for('logout') }}" class="btn btn-danger btn-lg">🚪 Logout</a>
+    </div>
 </div>
 {% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1>All Confirmed Bookings</h1>
+
+    {% if bookings %}
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>User</th>
+                <th>Type</th>
+                <th>Destination / Package</th>
+                <th>People</th>
+                <th>Booking Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in bookings %}
+            <tr>
+                <td>{{ booking.user.username }}</td>
+                <td>
+                    {% if booking.package %}
+                        Standard Package
+                    {% elif booking.custom_trip %}
+                        Custom Trip
+                    {% endif %}
+                </td>
+                <td>
+                    {% if booking.package %}
+                        {{ booking.package.title }}
+                    {% elif booking.custom_trip %}
+                        {{ booking.custom_trip.destination }}
+                    {% endif %}
+                </td>
+                <td>{{ booking.members }}</td>
+                <td>{{ booking.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+                <td>
+                    <a href="{{ url_for('admin_booking_details', booking_id=booking.id) }}" 
+                       class="btn btn-sm btn-info">
+                        Details
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p style="text-align:center; color: gray;">No confirmed bookings yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

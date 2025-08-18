@@ -1,31 +1,65 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>Admin - Tour Packages</h2>
-    <a href="{{ url_for('add_tour_package') }}" class="btn btn-primary mb-3">+ Add New Package</a>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Title</th>
-                <th>Location</th>
-                <th>Price</th>
-                <th>Duration</th>
-                <th>Members</th>
-                <th>Tour Type</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for package in packages %}
-            <tr>
-                <td>{{ package.title }}</td>
-                <td>{{ package.location }}</td>
-                <td>${{ package.price }}</td>
-                <td>{{ package.duration }}</td>
-                <td>{{ package.members }}</td>
-                <td>{{ package.tour_type }}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+<!-- Top buttons: Add Package (left) and Admin Dashboard (right) -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="{{ url_for('add_tour_package') }}" class="btn btn-success">
+        Add Package
+    </a>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+        Admin Dashboard
+    </a>
 </div>
+
+<h2 class="mb-4">Manage Tour Packages</h2>
+
+<table class="table table-bordered table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Image</th>
+            <th>Title</th>
+            <th>Location</th>
+            <th>Price</th>
+            <th>Duration</th>
+            <th>Max Members</th>
+            <th>Booked Members</th>
+            <th>Available Slots</th>
+            <th>Tour Type</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for package in packages %}
+        <tr>
+            <td>
+                {% if package.image_filename %}
+                    <img src="{{ url_for('static', filename='uploads/' ~ package.image_filename) }}" width="100">
+                {% else %}
+                    N/A
+                {% endif %}
+            </td>
+            <td>{{ package.title }}</td>
+            <td>{{ package.location }}</td>
+            <td>${{ package.price }}</td>
+            <td>{{ package.duration }}</td>
+            <td>{{ package.members }}</td>
+            <td>{{ package.booked_members }}</td>
+            <td>{{ package.available_slots }}</td>
+            <td>{{ package.tour_type }}</td>
+            <td class="d-flex gap-1">
+                <!-- Delete button (red) -->
+                <form action="{{ url_for('delete_tour_package', package_id=package.id) }}" method="POST" style="display:inline-block;">
+                    <button type="submit" class="btn btn-sm" style="background-color: #dc3545; color: white;">Delete</button>
+                </form>
+
+                <!-- Edit button (green) -->
+                <a href="{{ url_for('edit_tour_package', package_id=package.id) }}" class="btn btn-sm" style="background-color: #28a745; color: white;">Edit</a>
+
+                <!-- Details button (blue) -->
+                <a href="{{ url_for('tour_package_details', package_id=package.id) }}" class="btn btn-sm" style="background-color: #007bff; color: white;">Details</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 {% endblock %}

@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2 class="mb-4">Tour Package Details</h2>
+
+<div class="card mb-3" style="max-width: 800px;">
+    <div class="row g-0">
+        <div class="col-md-4">
+            {% if package.image_filename %}
+                <img src="{{ url_for('static', filename='uploads/' ~ package.image_filename) }}" class="img-fluid rounded-start">
+            {% else %}
+                <img src="{{ url_for('static', filename='uploads/default.png') }}" class="img-fluid rounded-start">
+            {% endif %}
+        </div>
+        <div class="col-md-8">
+            <div class="card-body">
+                <h5 class="card-title">{{ package.title }}</h5>
+                <p class="card-text"><strong>Location:</strong> {{ package.location }}</p>
+                <p class="card-text"><strong>Price:</strong> ${{ package.price }}</p>
+                <p class="card-text"><strong>Duration:</strong> {{ package.duration }}</p>
+                <p class="card-text"><strong>Max Members:</strong> {{ package.members }}</p>
+                <p class="card-text"><strong>Booked Members:</strong> {{ package.booked_members }}</p>
+                <p class="card-text"><strong>Available Slots:</strong> {{ package.available_slots }}</p>
+                <p class="card-text"><strong>Tour Type:</strong> {{ package.tour_type }}</p>
+                <p class="card-text"><strong>Facilities:</strong> {{ package.facilities }}</p>
+                <p class="card-text"><strong>Hotel:</strong> {{ package.hotel_name }} ({{ package.room_type }}, {{ package.number_of_rooms }} rooms)</p>
+                <p class="card-text"><strong>Transportation:</strong> {{ package.transportation_details }}</p>
+                <a href="{{ url_for('admin_tour_packages') }}" class="btn btn-secondary mt-2">Back to Packages</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

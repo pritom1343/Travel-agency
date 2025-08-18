@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h1>Manage Custom Trips</h1>
+
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>User</th>
+                <th>Destination</th>
+                <th>Dates</th>
+                <th>Rooms</th>
+                <th>Room Type</th>
+                <th>People</th>
+                <th>Status</th>
+                <th>Price</th>
+                <th>Notes</th>
+                <th>Resubmitted?</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for trip in trips %}
+            <tr>
+                <td>{{ trip.user.username }}</td>
+                <td>{{ trip.destination }}</td>
+                <td>{{ trip.start_date }} → {{ trip.end_date }}</td>
+                <td>{{ trip.number_of_rooms if trip.number_of_rooms > 0 else "No Rooms" }}</td>
+                <td>{{ trip.room_type if trip.number_of_rooms > 0 else "-" }}</td>
+                <td>{{ trip.people }}</td>
+                <td>
+                    {% if trip.status == "Pending" %}
+                        <span class="badge bg-warning">{{ trip.status }}</span>
+                    {% elif trip.status == "Approved" %}
+                        <span class="badge bg-success">{{ trip.status }}</span>
+                    {% elif trip.status == "Rejected" %}
+                        <span class="badge bg-danger">{{ trip.status }}</span>
+                    {% endif %}
+                </td>
+                <td>{{ trip.price if trip.price else "Not set" }}</td>
+                <td>{{ trip.admin_notes if trip.admin_notes else "-" }}</td>
+                <td>
+                    {% if trip.resubmit_flag %}
+                        <span class="badge bg-info">Yes</span>
+                    {% else %}
+                        No
+                    {% endif %}
+                </td>
+                <td>
+                    <form method="POST" action="{{ url_for('update_custom_trip', trip_id=trip.id) }}">
+                        <input type="number" step="0.01" name="price" placeholder="Price" class="form-control mb-1" value="{{ trip.price or '' }}">
+                        <textarea name="admin_notes" class="form-control mb-1" placeholder="Admin Notes">{{ trip.admin_notes or '' }}</textarea>
+                        <button name="action" value="approve" class="btn btn-success btn-sm">Approve</button>
+                        <button name="action" value="reject" class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

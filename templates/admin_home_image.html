@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Admin Dashboard Button -->
+    <div class="d-flex justify-content-start mb-3">
+        <a href="{{ url_for('dashboard') }}" class="btn btn-primary">Admin Dashboard</a>
+    </div>
+
+    <h2 class="mb-3">Update Homepage Wallpaper</h2>
+
+    {% if home_image %}
+        <p>Current Wallpaper:</p>
+        <img src="{{ url_for('static', filename='uploads/' ~ home_image.filename) }}" class="img-fluid mb-3" style="max-height:400px; width:100%; object-fit:cover;">
+    {% else %}
+        <p>No wallpaper uploaded yet.</p>
+    {% endif %}
+
+    <form method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+            <label for="image_file" class="form-label">Upload New Wallpaper:</label>
+            <input type="file" name="image_file" id="image_file" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-success">Upload</button>
+    </form>
+</div>
+{% endblock %}

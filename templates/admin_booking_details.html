@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Booking Details</h2>
+    <div class="card p-4 shadow-lg">
+
+        <p><strong>User:</strong> {{ booking.user.username }}</p>
+        <p><strong>Email:</strong> {{ booking.user.email }}</p>
+        <p><strong>People:</strong> {{ booking.members }}</p>
+        <p><strong>Booking Date:</strong> {{ booking.created_at.strftime("%Y-%m-%d %H:%M") }}</p>
+
+        {% if booking.package %}
+            <hr>
+            <h4>Standard Package Info</h4>
+            <p><strong>Package Title:</strong> {{ booking.package.title }}</p>
+            <p><strong>Destination:</strong> {{ booking.package.destination }}</p>
+            <p><strong>Price:</strong> ${{ booking.package.price }}</p>
+            <p><strong>Description:</strong> {{ booking.package.description }}</p>
+        {% elif booking.custom_trip %}
+            <hr>
+            <h4>Custom Trip Info</h4>
+            <p><strong>Destination:</strong> {{ booking.custom_trip.destination }}</p>
+            <p><strong>Transport:</strong> {{ booking.custom_trip.transport }}</p>
+            <p><strong>Hotel:</strong> {{ booking.custom_trip.hotel }}</p>
+            <p><strong>Rooms:</strong> {{ booking.custom_trip.number_of_rooms }} ({{ booking.custom_trip.room_type }})</p>
+            <p><strong>Start Date:</strong> {{ booking.custom_trip.start_date }}</p>
+            <p><strong>End Date:</strong> {{ booking.custom_trip.end_date }}</p>
+            <p><strong>Other Preferences:</strong> {{ booking.custom_trip.other_preferences }}</p>
+            <p><strong>Notes:</strong> {{ booking.custom_trip.notes }}</p>
+            <p><strong>Status:</strong> {{ booking.custom_trip.status }}</p>
+            <p><strong>Admin Price:</strong> {{ booking.custom_trip.price or "Not set yet" }}</p>
+        {% endif %}
+
+        <a href="{{ url_for('admin_bookings') }}" class="btn btn-secondary mt-3">Back</a>
+    </div>
+</div>
+{% endblock %}

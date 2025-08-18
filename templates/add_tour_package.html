@@ -1,24 +1,96 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>Add Tour Package</h2>
+<div class="container mt-5">
+    <h2 class="mb-4">
+        {% if package %}
+            Edit Package
+        {% else %}
+            Add New Package
+        {% endif %}
+    </h2>
+
     <form method="POST" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
-        {{ form.title.label }} {{ form.title(class="form-control") }}
-        {{ form.description.label }} {{ form.description(class="form-control") }}
-        {{ form.price.label }} {{ form.price(class="form-control") }}
-        {{ form.location.label }} {{ form.location(class="form-control") }}
-        {{ form.duration.label }} {{ form.duration(class="form-control") }}
-        {{ form.members.label }} {{ form.members(class="form-control") }}
-        {{ form.facilities.label }} {{ form.facilities(class="form-control") }}
-        {{ form.hotel_name.label }} {{ form.hotel_name(class="form-control") }}
-        {{ form.room_type.label }} {{ form.room_type(class="form-control") }}
-        {{ form.number_of_rooms.label }} {{ form.number_of_rooms(class="form-control") }}
-        {{ form.transportation_details.label }} {{ form.transportation_details(class="form-control") }}
-        {{ form.tour_type.label }} {{ form.tour_type(class="form-control") }}
-        {{ form.image_file.label }} {{ form.image_file(class="form-control") }}
-        <br>
-        {{ form.submit(class="btn btn-success") }}
+
+        <div class="mb-3">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control", value=package.title if package else "") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control", value=package.description if package else "", rows="4") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.price.label(class="form-label") }}
+            {{ form.price(class="form-control", value=package.price if package else "") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.location.label(class="form-label") }}
+            {{ form.location(class="form-control", value=package.location if package else "") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.duration.label(class="form-label") }}
+            {{ form.duration(class="form-control", value=package.duration if package else "") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.members.label(class="form-label") }}
+            {{ form.members(class="form-control", value=package.members if package else "") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.facilities.label(class="form-label") }}
+            {{ form.facilities(class="form-control", value=package.facilities if package else "") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.hotel_name.label(class="form-label") }}
+            {{ form.hotel_name(class="form-control", value=package.hotel_name if package else "") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.room_type.label(class="form-label") }}
+            {{ form.room_type(class="form-control", value=package.room_type if package else "") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.number_of_rooms.label(class="form-label") }}
+            {{ form.number_of_rooms(class="form-control", value=package.number_of_rooms if package else "") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.transportation_details.label(class="form-label") }}
+            {{ form.transportation_details(class="form-control", value=package.transportation_details if package else "") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.tour_type.label(class="form-label") }}
+            {{ form.tour_type(class="form-control", value=package.tour_type if package else "") }}
+        </div>
+
+        <div class="mb-3">
+            {{ form.image_file.label(class="form-label") }}
+            {{ form.image_file(class="form-control") }}
+            {% if package and package.image_filename %}
+                <p class="mt-2">Current Image:</p>
+                <img src="{{ url_for('static', filename='uploads/' ~ package.image_filename) }}" 
+                     alt="Package Image" style="max-width: 200px; margin-top: 5px;">
+            {% endif %}
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            {% if package %}
+                Update Package
+            {% else %}
+                Add Package
+            {% endif %}
+        </button>
+        <a href="{{ url_for('admin_tour_packages') }}" class="btn btn-secondary ms-2">Cancel</a>
     </form>
 </div>
 {% endblock %}

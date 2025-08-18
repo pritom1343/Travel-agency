@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block content %}
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 700px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #007bff;
+            margin-bottom: 25px;
+        }
+        label {
+            font-weight: bold;
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 6px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        .form-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+        }
+        .btn {
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: none;
+            font-size: 15px;
+            color: #fff;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-green { background-color: #28a745; }
+        .btn-green:hover { background-color: #218838; }
+        .btn-blue { background-color: #007bff; }
+        .btn-blue:hover { background-color: #0056b3; }
+    </style>
+    <div class="container">
+        <h2>{{ 'Edit Trip' if trip else 'Create Your Custom Trip' }}</h2>
+
+        <form method="POST" 
+              action="{% if trip %}{{ url_for('edit_custom_trip', trip_id=trip.id) }}{% else %}{{ url_for('custom_trip') }}{% endif %}">
+            
+            <label for="destination">Destination</label>
+            <input type="text" id="destination" name="destination" value="{{ trip.destination if trip else '' }}" required>
+
+            <label for="transport">Transport</label>
+            <input type="text" id="transport" name="transport" value="{{ trip.transport if trip else '' }}" required>
+
+            <label for="hotel">Hotel</label>
+            <input type="text" id="hotel" name="hotel" value="{{ trip.hotel if trip else '' }}" required>
+            <div class="form-group">
+                <label for="number_of_rooms">Number of Rooms (optional)</label>
+                <input type="number" id="number_of_rooms" name="number_of_rooms" class="form-control" min="1" placeholder="Enter number of rooms">
+            </div>
+
+            <div class="form-group">
+                <label for="room_type">Room Type (optional)</label>
+                <select id="room_type" name="room_type" class="form-control">
+                    <option value="">No Room</option>
+                    <option value="Single">Single</option>
+                    <option value="Double">Double</option>
+                    <option value="Suite">Suite</option>
+                </select>
+            </div>
+
+            <label for="people">Number of People</label>
+            <input type="number" id="people" name="people" value="{{ trip.people if trip else 1 }}" min="1" required>
+
+            <label for="start_date">Start Date</label>
+            <input type="date" id="start_date" name="start_date" value="{{ trip.start_date if trip else '' }}" required>
+
+            <label for="end_date">End Date</label>
+            <input type="date" id="end_date" name="end_date" value="{{ trip.end_date if trip else '' }}" required>
+
+            <label for="other_preferences">Other Preferences</label>
+            <input type="text" id="other_preferences" name="other_preferences" value="{{ trip.other_preferences if trip else '' }}">
+
+            <label for="notes">Notes</label>
+            <textarea id="notes" name="notes">{{ trip.notes if trip else '' }}</textarea>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-green">{{ 'Update Trip' if trip else 'Submit' }}</button>
+                <a href="{{ url_for('user_dashboard') }}" class="btn btn-blue">Dashboard</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

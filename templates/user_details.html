@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2 class="mb-4">User Details</h2>
+
+    <!-- Admin Dashboard Button -->
+    <a href="{{ url_for('dashboard') }}" class="btn btn-primary mb-3">Admin Dashboard</a>
+
+    <div class="card" style="width: 30rem;">
+        <div class="card-body">
+            <h5 class="card-title">{{ user.username }}</h5>
+            <p class="card-text"><strong>ID:</strong> {{ user.id }}</p>
+            <p class="card-text"><strong>Email:</strong> {{ user.email }}</p>
+            <p class="card-text"><strong>Phone:</strong> {{ user.phone }}</p>
+            <p class="card-text"><strong>Gender:</strong> {{ user.gender or 'N/A' }}</p>
+            <p class="card-text"><strong>Age:</strong> {{ user.age or 'N/A' }}</p>
+            <p class="card-text"><strong>Occupation:</strong> {{ user.occupation or 'N/A' }}</p>
+            <p class="card-text"><strong>Address:</strong> {{ user.address or 'N/A' }}</p>
+            <p class="card-text"><strong>Is Admin:</strong> {{ 'Yes' if user.is_admin else 'No' }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
