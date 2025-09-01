@@ -62,6 +62,25 @@
 <div class="hero">
     <h1>ASTHA TRAVEL AGENCY</h1>
 
+
+        
+    {% set stats = get_agency_stats() %}
+    {% if stats.total_ratings > 0 %}
+    <div class="agency-rating" style="position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.9); padding: 10px 15px; border-radius: 10px; color: #333;">
+        <div style="text-align: center;">
+            <div style="font-size: 1.8rem; font-weight: bold; color: #ff9900;">
+                {{ stats.average_rating }}/5
+            </div>
+            <div style="font-size: 1.2rem; margin-bottom: 5px;">
+                {% for i in range(stats.average_rating|int) %}⭐{% endfor %}
+            </div>
+            <div style="font-size: 0.9rem; color: #666;">
+                {{ stats.total_ratings }} ratings
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="btn-group">
         <a href="{{ url_for('home') }}" class="btn">Home</a>
         <a href="{{ url_for('login') }}" class="btn">Login</a>

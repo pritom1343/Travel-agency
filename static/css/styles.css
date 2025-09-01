@@ -1058,6 +1058,29 @@ body, html {
     text-decoration: underline;
 }
 
+/* Style for replies */
+.replies-section {
+    border-left: 3px solid #007bff;
+    padding-left: 15px;
+}
+
+.reply-card {
+    background-color: #f8f9fa;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.admin-reply {
+    background-color: #e3f2fd;
+    border-left: 3px solid #28a745;
+}
+
+.user-reply {
+    background-color: #f0f0f0;
+    border-left: 3px solid #6c757d;
+}
+
 /* Navbar Styles */
 .navbar {
     background-color: #343a40;

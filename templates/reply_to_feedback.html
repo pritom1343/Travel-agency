@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">💬 Reply to Feedback</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Original Feedback -->
+                    <div class="original-feedback mb-4 p-3 bg-light rounded">
+                        <h6>Original Feedback from {{ rating.user.username }}:</h6>
+                        <div class="mb-2">
+                            <span class="badge bg-primary">
+                                {% for i in range(rating.rating) %}⭐{% endfor %}
+                                ({{ rating.rating }}/5)
+                            </span>
+                            <small class="text-muted">{{ rating.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                        </div>
+                        <p class="mb-0">{{ rating.feedback or "No feedback text provided" }}</p>
+                    </div>
+                    
+                    <!-- Reply Form -->
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.reply_text.label(class="form-label fw-bold") }}
+                            {{ form.reply_text(class="form-control", rows=4, placeholder="Type your reply...") }}
+                            {% for error in form.reply_text.errors %}
+                                <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                            <div class="form-text">Maximum 500 characters</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('admin_agency_feedback') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

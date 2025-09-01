@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">💬 Reply to Admin</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Show the conversation thread -->
+                    <div class="conversation-thread mb-4">
+                        <h6>Conversation:</h6>
+                        {% for reply in rating.replies|sort(attribute='created_at') %}
+                        <div class="reply mb-2 p-2 {% if reply.is_admin_reply %}bg-light{% else %}bg-info text-white{% endif %} rounded">
+                            <div class="d-flex justify-content-between">
+                                <strong>{% if reply.is_admin_reply %}👑 Admin{% else %}👤 You{% endif %}:</strong>
+                                <small>{{ reply.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                            <p class="mb-0">{{ reply.reply_text }}</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Reply Form -->
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.reply_text.label(class="form-label fw-bold") }}
+                            {{ form.reply_text(class="form-control", rows=4, placeholder="Type your reply to the admin...") }}
+                            {% for error in form.reply_text.errors %}
+                                <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('user_dashboard') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

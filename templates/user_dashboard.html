@@ -79,6 +79,35 @@
         <div class="btn-wrapper"><a href="{{ url_for('custom_trip') }}">📝 Custom Own Trip</a></div>
         <div class="btn-wrapper"><a href="{{ url_for('my_custom_trips') }}">📂 My Custom Trips</a></div>
         <div class="btn-wrapper"><a href="{{ url_for('logout') }}" class="logout-btn">🚪 Logout</a></div>
+        <div class="btn-wrapper"><a href="{{ url_for('user_chat') }}">💬 Chat with Admin</a></div>
+
+        <div class="btn-wrapper"><a href="{{ url_for('agency_feedback') }}">⭐ Rate Our Agency</a></div>
+        <!-- In user_dashboard.html where you show user's feedback -->
+{% if user_feedback %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h5>Your Rating: {{ user_feedback.rating }}/5</h5>
+            <p>{{ user_feedback.feedback }}</p>
+            <small class="text-muted">Posted on {{ user_feedback.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+            
+            <!-- Show reply count instead of button -->
+            {% if user_feedback.replies %}
+                <div class="mt-2">
+                    <span class="badge bg-info">
+                        {{ user_feedback.replies|length }} repl{{ 'y' if user_feedback.replies|length == 1 else 'ies' }}
+                    </span>
+                </div>
+            {% endif %}
+            
+            <!-- Link to view full feedback with replies -->
+            <div class="mt-2">
+                <a href="{{ url_for('agency_feedback') }}" class="btn btn-outline-primary btn-sm">
+                    View/Edit Feedback
+                </a>
+            </div>
+        </div>
+    </div>
+{% endif %}
     </div>
 
     <!-- Profile Section -->

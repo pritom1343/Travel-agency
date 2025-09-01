@@ -98,3 +98,19 @@ class DeleteTripForm(FlaskForm):
 
 
 
+class AgencyRatingForm(FlaskForm):
+    rating = SelectField('Rating', choices=[
+        (5, '⭐⭐⭐⭐⭐ (Excellent)'),
+        (4, '⭐⭐⭐⭐ (Very Good)'),
+        (3, '⭐⭐⭐ (Good)'),
+        (2, '⭐⭐ (Fair)'),
+        (1, '⭐ (Poor)')
+    ], coerce=int, validators=[DataRequired()])
+    feedback = TextAreaField('Feedback', validators=[Length(max=500)])
+    submit = SubmitField('Submit Feedback')
+
+
+
+class RatingReplyForm(FlaskForm):
+    reply_text = TextAreaField('Your Reply', validators=[DataRequired(), Length(max=500)])
+    submit = SubmitField('Post Reply')

@@ -1,8 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
+from datetime import datetime
 
 db = SQLAlchemy()
-
 class HomeImage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(100), nullable=False)
@@ -92,3 +92,66 @@ class CustomTrip(db.Model):
     status = db.Column(db.String(20), nullable=False, default="Pending")
     admin_notes = db.Column(db.Text, nullable=True)
     resubmit_flag = db.Column(db.Boolean, default=False)
+
+
+class ChatSession(db.Model):
+    __tablename__ = 'chat_sessions'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    # Relationships
+    user = db.relationship('User', backref=db.backref('chat_sessions', lazy=True))
+    messages = db.relationship('Message', backref='chat_session', lazy='dynamic', cascade='all, delete-orphan')
+
+    def get_unread_count(self, for_admin=True):
+        """Count unread messages. for_admin=True counts user's unread messages for admin."""
+        return self.messages.filter_by(is_read=False, is_admin_message=not for_admin).count()
+
+class Message(db.Model):
+    __tablename__ = 'messages'
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer, db.ForeignKey('chat_sessions.id'), nullable=False)
+    is_admin_message = db.Column(db.Boolean, default=False) # True if sender is admin
+    content = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    is_read = db.Column(db.Boolean, default=False)
+
+# models.py (update AgencyRating model and add Reply model)
+
+class AgencyRating(db.Model):
+    __tablename__ = 'agency_ratings'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)  # 1-5 stars
+    feedback = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # Removed is_approved field
+    
+    # Relationship
+    user = db.relationship('User', backref=db.backref('agency_ratings', lazy=True))
+    replies = db.relationship('RatingReplyForm', backref='rating', lazy=True, cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<AgencyRating {self.rating} stars by {self.user.username}>'
+
+class RatingReplyForm(db.Model):
+    __tablename__ = 'rating_replies'
+    id = db.Column(db.Integer, primary_key=True)
+    rating_id = db.Column(db.Integer, db.ForeignKey('agency_ratings.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    is_admin_reply = db.Column(db.Boolean, default=False)
+    reply_text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref=db.backref('rating_replies', lazy=True))
+
+class AgencyStats(db.Model):
+    __tablename__ = 'agency_stats'
+    id = db.Column(db.Integer, primary_key=True)
+    total_ratings = db.Column(db.Integer, default=0)
+    average_rating = db.Column(db.Float, default=0.0)
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)    
