@@ -1,52 +1,83 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
-    <h1>All Confirmed Bookings</h1>
+<style>
+    .gradient-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+    .gradient-dark {
+        background: linear-gradient(135deg, #2c3e50 0%, #4a5568 100%);
+    }
+    .badge-package {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    .badge-custom {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+    .btn-details {
+        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+        transition: all 0.3s ease;
+    }
+    .btn-details:hover {
+        transform: translateY(-2px);
+    }
+</style>
+
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="gradient-header text-center text-white rounded-3 p-4 mb-4">
+        <h1 class="fw-bold display-6 text-shadow">All Confirmed Bookings</h1>
+    </div>
 
     {% if bookings %}
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>User</th>
-                <th>Type</th>
-                <th>Destination / Package</th>
-                <th>People</th>
-                <th>Booking Date</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for booking in bookings %}
-            <tr>
-                <td>{{ booking.user.username }}</td>
-                <td>
-                    {% if booking.package %}
-                        Standard Package
-                    {% elif booking.custom_trip %}
-                        Custom Trip
-                    {% endif %}
-                </td>
-                <td>
-                    {% if booking.package %}
-                        {{ booking.package.title }}
-                    {% elif booking.custom_trip %}
-                        {{ booking.custom_trip.destination }}
-                    {% endif %}
-                </td>
-                <td>{{ booking.members }}</td>
-                <td>{{ booking.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
-                <td>
-                    <a href="{{ url_for('admin_booking_details', booking_id=booking.id) }}" 
-                       class="btn btn-sm btn-info">
-                        Details
-                    </a>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="table-responsive shadow rounded-3">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="gradient-dark text-white">
+                <tr>
+                    <th>User</th>
+                    <th>Type</th>
+                    <th>Destination / Package</th>
+                    <th>People</th>
+                    <th>Booking Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>
+                        <div>
+                            <div class="fw-semibold text-dark">{{ booking.user.username }}</div>
+                            <small class="text-muted">{{ booking.user.email }}</small>
+                        </div>
+                    </td>
+                    <td>
+                        {% if booking.package %}
+                            <span class="badge badge-package text-white">Standard Package</span>
+                        {% elif booking.custom_trip %}
+                            <span class="badge badge-custom text-white">Custom Trip</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {{ booking.package.title if booking.package else booking.custom_trip.destination }}
+                    </td>
+                    <td>{{ booking.members }}</td>
+                    <td>{{ booking.created_at.strftime("%Y-%m-%d %H:%M") }}</td>
+                    <td>
+                        <a href="{{ url_for('admin_booking_details', booking_id=booking.id) }}" 
+                           class="btn btn-details text-white px-3 py-1 rounded-2 shadow-sm">
+                            View Details
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
     {% else %}
-        <p style="text-align:center; color: gray;">No confirmed bookings yet.</p>
+    <div class="text-center text-muted fst-italic p-5 bg-white rounded-3 shadow-sm">
+        <p>No confirmed bookings yet.</p>
+    </div>
     {% endif %}
 </div>
 {% endblock %}

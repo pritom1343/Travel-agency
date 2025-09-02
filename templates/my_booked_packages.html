@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>📦 My Booked Packages</h2>
+    
+    {% if bookings %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Booking ID</th>
+                    <th>Package</th>
+                    <th>Destination</th>
+                    <th>Members</th>
+                    <th>Total Amount</th>
+                    <th>Booking Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for booking in bookings %}
+                <tr>
+                    <td>{{ booking.id }}</td>
+                    <td>{{ booking.package.title }}</td>
+                    <td>{{ booking.package.destination }}</td>
+                    <td>{{ booking.members }}</td>
+                    <td>৳{{ booking.final_amount }}</td>
+                    <td>{{ booking.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        <span class="badge {% if booking.payment_status == 'Completed' %}bg-success{% else %}bg-warning{% endif %}">
+                            {{ booking.payment_status }}
+                        </span>
+                        {% if booking.refunds %}
+                            {% set refund = booking.refunds[0] %}
+                            {% if refund.status == "Approved" %}
+                                <br><span class="badge bg-success">Refunded</span>
+                            {% elif refund.status == "Pending" %}
+                                <br><span class="badge bg-info">Refund Requested</span>
+                            {% elif refund.status == "Rejected" %}
+                                <br><span class="badge bg-danger">Refund Rejected</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td style="min-width: 200px;">
+                        <div class="d-flex flex-column gap-2">
+                            <!-- Details Button -->
+                            <button type="button" class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#detailsModal{{ booking.id }}">
+                                Details
+                            </button>
+                            
+                            <!-- Refund Section -->
+                            {% if booking.payment_status == 'Completed' %}
+                                {% if booking.refunds %}
+                                    {% set refund = booking.refunds[0] %}
+                                    <div class="text-center">
+                                        {% if refund.status == "Approved" %}
+                                            <div class="refund-approved">
+                                                <span class="badge bg-success mb-1">Refunded</span>
+                                                <div class="refund-details">
+                                                    {% if refund.transaction_number %}
+                                                        <div><small>Trx: {{ refund.transaction_number }}</small></div>
+                                                    {% endif %}
+                                                    {% if refund.admin_notes %}
+                                                        <div><small>Notes: {{ refund.admin_notes }}</small></div>
+                                                    {% endif %}
+                                                    {% if refund.processed_date %}
+                                                        <div><small>{{ refund.processed_date.strftime('%Y-%m-%d') }}</small></div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        {% elif refund.status == "Pending" %}
+                                            <span class="badge bg-info">Refund Requested</span>
+                                            {% if refund.request_date %}
+                                                <div><small>{{ refund.request_date.strftime('%Y-%m-%d') }}</small></div>
+                                            {% endif %}
+                                        {% elif refund.status == "Rejected" %}
+                                            <span class="badge bg-danger mb-1">Refund Rejected</span>
+                                            {% if refund.admin_notes %}
+                                                <div class="refund-details">
+                                                    <div><small>Reason: {{ refund.admin_notes }}</small></div>
+                                                    {% if refund.processed_date %}
+                                                        <div><small>{{ refund.processed_date.strftime('%Y-%m-%d') }}</small></div>
+                                                    {% endif %}
+                                                </div>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                {% else %}
+                                    {% if booking.can_request_refund() %}
+                                        <button type="button" class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#refundModal{{ booking.id }}">
+                                            Request Refund
+                                        </button>
+                                    {% else %}
+                                        <div class="text-center">
+                                            <span class="badge bg-secondary">Refund Expired</span>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                
+                <!-- Details Modal -->
+                <div class="modal fade" id="detailsModal{{ booking.id }}" tabindex="-1" aria-labelledby="detailsModalLabel{{ booking.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-lg">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="detailsModalLabel{{ booking.id }}">Booking Details #{{ booking.id }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h6>Package Information</h6>
+                                        <p><strong>Title:</strong> {{ booking.package.title }}</p>
+                                        <p><strong>Destination:</strong> {{ booking.package.destination }}</p>
+                                        <p><strong>Duration:</strong> {{ booking.package.duration }}</p>
+                                        <p><strong>Hotel:</strong> {{ booking.package.hotel_name }}</p>
+                                        <p><strong>Transport:</strong> {{ booking.package.transportation_details }}</p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Booking Information</h6>
+                                        <p><strong>Booking ID:</strong> {{ booking.id }}</p>
+                                        <p><strong>Members:</strong> {{ booking.members }}</p>
+                                        <p><strong>Total Amount:</strong> ৳{{ booking.total_amount }}</p>
+                                        {% if booking.discount_amount > 0 %}
+                                        <p><strong>Discount:</strong> -৳{{ booking.discount_amount }}</p>
+                                        <p><strong>Final Amount:</strong> ৳{{ booking.final_amount }}</p>
+                                        {% endif %}
+                                        <p><strong>Payment Method:</strong> {{ booking.payment_method|title }}</p>
+                                        <p><strong>Transaction ID:</strong> {{ booking.transaction_id }}</p>
+                                        <p><strong>Booking Date:</strong> {{ booking.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                                        
+                                        <!-- Refund Information in Details Modal -->
+                                        {% if booking.refunds %}
+                                            {% set refund = booking.refunds[0] %}
+                                            <hr>
+                                            <h6>Refund Information</h6>
+                                            <p><strong>Refund Status:</strong> 
+                                                <span class="badge {% if refund.status == 'Approved' %}bg-success{% elif refund.status == 'Pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                                                    {{ refund.status }}
+                                                </span>
+                                            </p>
+                                            {% if refund.transaction_number %}
+                                                <p><strong>Refund Transaction:</strong> {{ refund.transaction_number }}</p>
+                                            {% endif %}
+                                            {% if refund.admin_notes %}
+                                                <p><strong>Admin Notes:</strong> {{ refund.admin_notes }}</p>
+                                            {% endif %}
+                                            {% if refund.request_date %}
+                                                <p><strong>Request Date:</strong> {{ refund.request_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                                            {% endif %}
+                                            {% if refund.processed_date %}
+                                                <p><strong>Processed Date:</strong> {{ refund.processed_date.strftime('%Y-%m-%d %H:%M') }}</p>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Refund Request Modal -->
+                <div class="modal fade" id="refundModal{{ booking.id }}" tabindex="-1" aria-labelledby="refundModalLabel{{ booking.id }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="refundModalLabel{{ booking.id }}">Request Refund for Booking #{{ booking.id }}</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form method="POST" action="{{ url_for('request_refund', booking_id=booking.id) }}">
+                                <div class="modal-body">
+                                    <p>You are requesting a refund for your booking of <strong>{{ booking.package.title }}</strong>.</p>
+                                    <p>Refund Amount: <strong>৳{{ booking.final_amount }}</strong></p>
+                                    
+                                    <div class="mb-3">
+                                        <label for="reason{{ booking.id }}" class="form-label">Reason for Refund</label>
+                                        <textarea class="form-control" id="reason{{ booking.id }}" name="reason" rows="3" required placeholder="Please explain why you are requesting a refund"></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-warning">Submit Refund Request</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">You haven't booked any packages yet.</div>
+    {% endif %}
+</div>
+
+<style>
+.refund-details {
+    font-size: 12px;
+    color: #555;
+    margin-top: 5px;
+    text-align: center;
+}
+.refund-details div {
+    margin-bottom: 2px;
+    line-height: 1.2;
+}
+.actions-column {
+    min-width: 200px;
+}
+.d-flex.flex-column.gap-2 {
+    gap: 8px !important;
+}
+.text-center {
+    text-align: center;
+}
+.badge {
+    display: inline-block;
+    margin-bottom: 3px;
+}
+</style>
+{% endblock %}

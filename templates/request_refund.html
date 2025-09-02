@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h4>💰 Request Refund</h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <strong>Booking Details:</strong><br>
+                        Destination: {{ booking.custom_trip.destination }}<br>
+                        Amount: ৳{{ booking.final_amount }}<br>
+                        Booking Date: {{ booking.created_at.strftime('%Y-%m-%d') }}
+                    </div>
+                    
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.reason.label(class="form-label") }}
+                            {{ form.reason(class="form-control", rows=4, placeholder="Please explain why you're requesting a refund...") }}
+                            {% for error in form.reason.errors %}
+                                <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-warning btn-lg") }}
+                        </div>
+                    </form>
+                    
+                    <div class="mt-3 alert alert-warning">
+                        <small>⚠️ Refund requests must be made within 7 days of booking confirmation.
+                        Admin approval is required for all refunds.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

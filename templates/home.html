@@ -2,98 +2,132 @@
 
 {% block content %}
 <style>
-    /* Fullscreen background */
+    /* Shared utilities */
+    .card {
+        background: rgba(255,255,255,0.95);
+        border-radius: 15px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        backdrop-filter: blur(10px);
+        padding: 15px;
+    }
+    .btn {
+        padding: 12px 25px;
+        font-size: 1.2rem;
+        font-weight: 600;
+        border-radius: 50px;
+        text-decoration: none;
+        transition: .3s;
+        box-shadow: 0 5px 15px rgba(0,0,0,.3);
+        border: 2px solid transparent;
+    }
+    .btn:hover { transform: translateY(-3px); }
+
+    /* Hero */
     .hero {
         position: relative;
-        width: 100%;
         height: 100vh;
-        background-image: url({{ url_for('static', filename='uploads/' ~ home_image.filename) if home_image else url_for('static', filename='default_wallpaper.jpg') }});
+        background: linear-gradient(rgba(0,0,0,.4), rgba(0,0,0,.6)), 
+            url({{ url_for('static', filename='uploads/' ~ home_image.filename) if home_image else url_for('static', filename='default_wallpaper.jpg') }});
         background-size: cover;
         background-position: center;
+        background-attachment: fixed;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
-        color: white;
-        text-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+        justify-content: center;
+        color: #fff;
+        text-align: center;
+        text-shadow: 2px 2px 8px rgba(0,0,0,.8);
+        padding: 20px;
     }
-
-    .hero h1 {
-        margin-top: 50px;
+    .main-title {
         font-size: 4rem;
-        font-weight: bold;
+        font-weight: 800;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg,#fff,#ffd700);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 2px;
+        text-transform: uppercase;
     }
 
-    .hero .btn-group {
-        margin-top: 30px;
-    }
+    /* Buttons */
+    .btn-group { display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; }
+    .btn-primary { background: linear-gradient(135deg,#007bff,#0056b3); color: #fff; }
+    .btn-secondary { background: linear-gradient(135deg,#28a745,#1e7e34); color: #fff; }
+    .btn-warning { background: linear-gradient(135deg,#ffc107,#e0a800); color: #212529; }
 
-    .hero .btn {
-        margin: 0 10px;
-        background-color: #007bff;
-        border: none;
-        color: white;
-        padding: 10px 20px;
-        font-size: 1.2rem;
-        border-radius: 5px;
+    /* Rating card */
+    .rating-card {
+        position: absolute; top: 20px; left: 20px; min-width: 140px;
+        border: 2px solid rgba(255,153,0,.4);
+        text-align: center; font-size: .8rem;
     }
+    .rating-value { font-size: 1.6rem; font-weight: bold; color: #ff9900; }
+    .rating-stars { font-size: 1rem; letter-spacing: 1px; }
 
-    .hero .btn:hover {
-        background-color: #0056b3;
-        color: white;
-    }
-
-    /* Admin upload form */
-    .upload-wallpaper {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        background: rgba(255,255,255,0.85);
-        padding: 15px;
-        border-radius: 8px;
-        color: black;
-    }
-
+    /* Upload form */
+    .upload-wallpaper { position: absolute; top: 20px; right: 20px; }
     .upload-wallpaper input[type=file] {
-        margin-bottom: 10px;
+        margin-bottom: 10px; padding: 8px;
+        border: 2px dashed #007bff; border-radius: 8px;
+        background: rgba(0,123,255,.1);
+    }
+
+    /* Responsive */
+    @media (max-width:768px) {
+        .main-title { font-size: 3rem; }
+        .btn { font-size: 1rem; }
+        .rating-card, .upload-wallpaper {
+            position: relative; margin: 15px auto;
+        }
+    }
+    @media (max-width:480px) {
+        .main-title { font-size: 2.2rem; }
+        .btn-group { flex-direction: column; }
+        .btn { width: 100%; max-width: 250px; }
     }
 </style>
 
 <div class="hero">
-    <h1>ASTHA TRAVEL AGENCY</h1>
-
-
-        
+    <!-- Agency Rating Card -->
     {% set stats = get_agency_stats() %}
     {% if stats.total_ratings > 0 %}
-    <div class="agency-rating" style="position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,0.9); padding: 10px 15px; border-radius: 10px; color: #333;">
-        <div style="text-align: center;">
-            <div style="font-size: 1.8rem; font-weight: bold; color: #ff9900;">
-                {{ stats.average_rating }}/5
-            </div>
-            <div style="font-size: 1.2rem; margin-bottom: 5px;">
-                {% for i in range(stats.average_rating|int) %}⭐{% endfor %}
-            </div>
-            <div style="font-size: 0.9rem; color: #666;">
-                {{ stats.total_ratings }} ratings
-            </div>
+    <div class="rating-card card">
+        <div class="agency-name">ASTHA TRAVEL AGENCY</div>
+        <div class="rating-value">{{ "%.1f"|format(stats.average_rating) }}/5</div>
+        <div class="rating-stars">
+            {% for i in range(5) %}
+                {% if i < stats.average_rating|int %}
+                    ⭐
+                {% elif stats.average_rating - i >= 0.5 %}
+                    ⭐
+                {% else %} ☆ {% endif %}
+            {% endfor %}
         </div>
+        <div>{{ stats.total_ratings }} ratings</div>
+        <div style="font-size:.7rem; font-style:italic; color:#666;">Overall Rating</div>
     </div>
     {% endif %}
 
+    <!-- Title -->
+    <h1 class="main-title">ASTHA TRAVEL AGENCY</h1>
+
+    <!-- Navigation -->
     <div class="btn-group">
-        <a href="{{ url_for('home') }}" class="btn">Home</a>
-        <a href="{{ url_for('login') }}" class="btn">Login</a>
-        <a href="{{ url_for('admin_login') }}" class="btn">Admin Login</a>
-        <a href="{{ url_for('register') }}" class="btn">Register</a>
+        <a href="{{ url_for('home') }}" class="btn btn-primary">Home</a>
+        <a href="{{ url_for('login') }}" class="btn btn-secondary">Login</a>
+        <a href="{{ url_for('admin_login') }}" class="btn btn-warning">Admin Login</a>
+        <a href="{{ url_for('register') }}" class="btn btn-secondary">Register</a>
     </div>
 
+    <!-- Admin Upload -->
     {% if current_user.is_authenticated and current_user.is_admin %}
-    <div class="upload-wallpaper">
+    <div class="upload-wallpaper card">
         <form method="POST" action="{{ url_for('admin_home_image') }}" enctype="multipart/form-data">
             <label for="image_file"><strong>Update Wallpaper:</strong></label>
             <input type="file" name="image_file" id="image_file" required>
-            <button type="submit" class="btn btn-success btn-sm">Upload</button>
+            <button type="submit" class="btn btn-secondary btn-sm">Upload</button>
         </form>
     </div>
     {% endif %}

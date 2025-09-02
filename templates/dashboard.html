@@ -1,99 +1,100 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
-    <h1 class="text-center mb-4">Admin Dashboard</h1>
+<style>
+    .dashboard-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        position: relative;
+    }
 
-    <!-- Top Action: Update Wallpaper -->
-    <div class="text-center mb-4">
-        <a href="{{ url_for('admin_home_image') }}" class="btn btn-lg btn-primary">
-            🖼️ Update Homepage Wallpaper
-        </a>
+    .logout-btn-top {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        border-radius: 5px;
+        font-weight: 500;
+        text-decoration: none;
+        background: linear-gradient(135deg, #ef4444, #dc2626);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+        transition: .3s;
+    }
+    .logout-btn-top:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(239,68,68,.3); }
+
+    .header-container { text-align: center; margin: 5px 0 30px; width: 100%; padding-top: 10px; }
+    .agency-name {
+        font-size: 2.8rem; font-weight: 800; margin: 5px 0 0;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        text-transform: uppercase; letter-spacing: 2px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,.1);
+    }
+    .dashboard-title { font-size: 2.2rem; font-weight: 600; color: #4a5568; margin: 5px 0 0; }
+
+    .buttons-container { display: flex; flex-direction: column; gap: 30px; width: 100%; max-width: 1200px; align-items: center; margin-top: 20px; }
+    .button-row { display: flex; justify-content: center; gap: 25px; width: 100%; flex-wrap: wrap; }
+
+    .big-action-btn {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: #fff; border-radius: 12px; font-weight: 600; text-decoration: none;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        width: 220px; height: 140px; gap: 15px; padding: 25px 20px; text-align: center;
+        box-shadow: 0 8px 16px rgba(102,126,234,.25); transition: .3s;
+    }
+    .big-action-btn:hover { transform: translateY(-5px); box-shadow: 0 12px 24px rgba(102,126,234,.4); }
+    .big-action-btn-warning { background: linear-gradient(135deg,#fbbf24,#f59e0b); box-shadow: 0 8px 16px rgba(251,191,36,.25); }
+    .big-action-btn-warning:hover { box-shadow: 0 12px 24px rgba(251,191,36,.4); }
+
+    .btn-icon { font-size: 2.8rem; }
+    .btn-text { font-size: 1.2rem; font-weight: 600; }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .big-action-btn { width: 180px; height: 120px; padding: 20px 15px; }
+        .btn-icon { font-size: 2.4rem; } .btn-text { font-size: 1.1rem; }
+        .agency-name { font-size: 2rem; } .dashboard-title { font-size: 1.8rem; }
+    }
+    @media (max-width: 868px) { .big-action-btn { width: calc(50% - 15px); max-width: 200px; height: 110px; } }
+    @media (max-width: 576px) {
+        .button-row { flex-direction: column; align-items: center; gap: 15px; }
+        .big-action-btn { width: 100%; max-width: 300px; height: 100px; flex-direction: row; justify-content: flex-start; padding: 15px 20px; }
+        .btn-icon { margin-right: 15px; font-size: 2rem; }
+        .agency-name { font-size: 1.6rem; letter-spacing: 1px; }
+        .dashboard-title { font-size: 1.5rem; }
+    }
+</style>
+
+<div class="dashboard-container">
+    <a href="{{ url_for('logout') }}" class="logout-btn-top">🚪 Logout</a>
+
+    <div class="header-container">
+        <h1 class="agency-name">ASTHA TRAVEL AGENCY</h1>
+        <h2 class="dashboard-title">Admin Dashboard</h2>
     </div>
 
-    <!-- Dashboard Cards -->
-    <div class="row g-4">
-        <!-- Manage Users -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow-sm h-100 text-center">
-                <div class="card-body">
-                    <h4 class="card-title">👤 User Management</h4>
-                    <p class="card-text">Manage registered users and view analytics.</p>
-                    <a href="{{ url_for('manage_users') }}" class="btn btn-outline-primary">
-                        Manage Users
-                    </a>
-                </div>
-            </div>
+    <div class="buttons-container">
+        <div class="button-row">
+            <a href="{{ url_for('admin_home_image') }}" class="big-action-btn"><span class="btn-icon">🖼️</span><span class="btn-text">Update Wallpaper</span></a>
+            <a href="{{ url_for('admin_bookings') }}" class="big-action-btn"><span class="btn-icon">📑</span><span class="btn-text">View Bookings</span></a>
+            <a href="{{ url_for('admin_tour_packages') }}" class="big-action-btn"><span class="btn-icon">🌍</span><span class="btn-text">Manage Packages</span></a>
+            <a href="{{ url_for('admin_custom_trips') }}" class="big-action-btn"><span class="btn-icon">✈️</span><span class="btn-text">Custom Trips</span></a>
         </div>
-        
-                
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow-sm h-100 text-center">
-                <div class="card-body">
-                    <h4 class="card-title">💬 Live Chat</h4>
-                    <p class="card-text">Manage real-time conversations with users.</p>
-                    <a href="{{ url_for('admin_chat_manager') }}" class="btn btn-outline-info">
-                        Chat Manager
-                    </a>
-                </div>
-            </div>
+        <div class="button-row">
+            <a href="{{ url_for('manage_users') }}" class="big-action-btn"><span class="btn-icon">👤</span><span class="btn-text">Manage Users</span></a>
+            <a href="{{ url_for('admin_chat_manager') }}" class="big-action-btn"><span class="btn-icon">💬</span><span class="btn-text">Manage Chat</span></a>
+            <a href="{{ url_for('admin_agency_feedback') }}" class="big-action-btn"><span class="btn-icon">⭐</span><span class="btn-text">Manage Feedback</span></a>
+            <a href="{{ url_for('admin_refunds') }}" class="big-action-btn big-action-btn-warning"><span class="btn-icon">💰</span><span class="btn-text">Refund</span></a>
         </div>
-
-        
-            <div class="col-md-6 col-lg-4">
-                <div class="card shadow-sm h-100 text-center">
-                    <div class="card-body">
-                        <h4 class="card-title">⭐ Feedback Management</h4>
-                        <p class="card-text">Manage user ratings and feedback for the agency.</p>
-                        <a href="{{ url_for('admin_agency_feedback') }}" class="btn btn-outline-info">
-                            Manage Feedback
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-        <!-- Tour Packages -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow-sm h-100 text-center">
-                <div class="card-body">
-                    <h4 class="card-title">🌍 Tour Packages</h4>
-                    <p class="card-text">Add, edit, and manage available travel packages.</p>
-                    <a href="{{ url_for('admin_tour_packages') }}" class="btn btn-outline-success">
-                        Manage Packages
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Confirmed Bookings -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow-sm h-100 text-center">
-                <div class="card-body">
-                    <h4 class="card-title">📑 Confirmed Bookings</h4>
-                    <p class="card-text">View and manage all confirmed bookings.</p>
-                    <a href="{{ url_for('admin_bookings') }}" class="btn btn-outline-info">
-                        View Bookings
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Custom Trips -->
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow-sm h-100 text-center">
-                <div class="card-body">
-                    <h4 class="card-title">✈️ Custom Trips</h4>
-                    <p class="card-text">Review and approve/reject custom trip requests.</p>
-                    <a href="{{ url_for('admin_custom_trips') }}" class="btn btn-outline-warning">
-                        Manage Custom Trips
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Logout -->
-    <div class="text-center mt-5">
-        <a href="{{ url_for('logout') }}" class="btn btn-danger btn-lg">🚪 Logout</a>
     </div>
 </div>
 {% endblock %}

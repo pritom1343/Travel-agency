@@ -1,0 +1,103 @@
+<!-- In admin_refunds.html, update the form for approving refunds -->
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2>💰 Refund Management</h2>
+    
+    {% if refunds %}
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Refund ID</th>
+                    <th>User</th>
+                    <th>Destination</th>
+                    <th>Package/Booking Details</th>
+                    <th>Amount</th>
+                    <th>Request Date</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for refund in refunds %}
+                <tr>
+                    <td>{{ refund.id }}</td>
+                    <td>{{ refund.user.username }}</td>
+                    <td>{{ refund.custom_trip.destination if refund.custom_trip else refund.booking.package.destination if refund.booking and refund.booking.package else 'N/A' }}</td>
+                    <td>
+                        {% if refund.booking %}
+                            {% if not refund.booking.can_request_refund() %}
+                                <span class="badge bg-danger">Refund Expired</span><br>
+                            {% endif %}
+                            {% if refund.booking.package %}
+                                <strong>Package:</strong> {{ refund.booking.package.title }}<br>
+                                <strong>Booking ID:</strong> {{ refund.booking.id }}
+                            {% elif refund.booking.custom_trip %}
+                                <strong>Custom Trip:</strong> {{ refund.booking.custom_trip.destination }}<br>
+                                <strong>Booking ID:</strong> {{ refund.booking.id }}
+                            {% endif %}
+                            <br>
+                            <a href="{{ url_for('admin_booking_details', booking_id=refund.booking.id) }}" class="btn btn-info btn-sm mt-1">View Booking Details</a>
+                        {% else %}
+                            No booking details available
+                        {% endif %}
+                    </td>
+                    <td>৳{{ refund.amount }}</td>
+                    <td>{{ refund.request_date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ refund.reason|truncate(50) }}</td>
+                    <td>
+                        <span class="badge {% if refund.status == 'Pending' %}bg-warning
+                                          {% elif refund.status == 'Approved' %}bg-success
+                                          {% else %}bg-danger{% endif %}">
+                            {{ refund.status }}
+                        </span>
+                        {% if refund.status == 'Approved' and refund.transaction_number %}
+                        <br><small>Trx: {{ refund.transaction_number }}</small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if refund.status == 'Pending' %}
+                            {% if refund.booking and not refund.booking.can_request_refund() %}
+                                <div class="alert alert-danger p-2 mb-2">
+                                    <small>Refund expired: 7 days have passed since booking</small>
+                                </div>
+                            {% else %}
+                                <form method="POST" action="{{ url_for('process_refund', refund_id=refund.id) }}" class="mb-2">
+                                    <input type="hidden" name="action" value="approve">
+                                    <div class="mb-1">
+                                        <input type="text" name="transaction_number" placeholder="Transaction Number" class="form-control form-control-sm" required>
+                                    </div>
+                                    <div class="mb-1">
+                                        <textarea name="admin_notes" placeholder="Admin notes" class="form-control form-control-sm" rows="2"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('process_refund', refund_id=refund.id) }}">
+                                    <input type="hidden" name="action" value="reject">
+                                    <div class="mb-1">
+                                        <textarea name="admin_notes" placeholder="Reason for rejection" class="form-control form-control-sm" rows="2" required></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                        <div class="text-muted">
+                            <small>Processed on: {{ refund.processed_date.strftime('%Y-%m-%d') if refund.processed_date }}</small>
+                            {% if refund.admin_notes %}
+                            <br><small>Notes: {{ refund.admin_notes }}</small>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">No refund requests found.</div>
+    {% endif %}
+</div>
+{% endblock %}

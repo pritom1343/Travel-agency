@@ -1,6 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
-from datetime import datetime
+from datetime import datetime, timedelta
 
 db = SQLAlchemy()
 class HomeImage(db.Model):
@@ -25,7 +25,6 @@ class User(UserMixin, db.Model):
    # profile_image = db.Column(db.String(200))
     image_file = db.Column(db.String(100), nullable=False, default='default.png')
 
-
 class TourPackage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(100), nullable=False)
@@ -34,7 +33,7 @@ class TourPackage(db.Model):
     location = db.Column(db.String(100), nullable=False)
     duration = db.Column(db.String(50))
     members = db.Column(db.Integer)               # Max members
-    booked_members = db.Column(db.Integer, default=0)  # Members already booked
+    booked_members = db.Column(db.Integer, default=0)  
     facilities = db.Column(db.String(200))
     hotel_name = db.Column(db.String(100))
     room_type = db.Column(db.String(50))
@@ -43,12 +42,28 @@ class TourPackage(db.Model):
     tour_type = db.Column(db.String(50))
     image_filename = db.Column(db.String(200))
 
+    
     @property
     def available_slots(self):
-        """Calculate remaining slots dynamically."""
+        """Calculate remaining slots excluding completed bookings and recent pending bookings"""
         if self.members is None:
             return 0
-        return max(self.members - self.booked_members, 0)
+        
+        
+        confirmed_bookings = sum(
+            booking.members for booking in self.bookings 
+            if booking.payment_status == 'Completed'
+        )
+
+        # Count pending bookings that are less than 1 hour old (updated from 1 hour)
+        one_hour_ago = datetime.utcnow() - timedelta(hours=1)  
+        recent_pending_bookings = sum(
+            booking.members for booking in self.bookings 
+            if booking.payment_status == 'Pending' and booking.created_at >= one_hour_ago
+        )
+        
+        # Available slots = total - (confirmed + recent pending)
+        return max(self.members - (confirmed_bookings + recent_pending_bookings), 0)
 
     def adjust_booked_members_on_edit(self, new_max_members):
         """If max members reduced below booked_members, adjust booked_members."""
@@ -56,19 +71,49 @@ class TourPackage(db.Model):
             self.booked_members = new_max_members
         self.members = new_max_members
 
+    def can_book(self, members_requested):
+        """Check if the requested number of members can be booked"""
+        return members_requested <= self.available_slots
+
 class Booking(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    package_id = db.Column(db.Integer, db.ForeignKey('tour_package.id'), nullable=True)   # Standard tour package
-    custom_trip_id = db.Column(db.Integer, db.ForeignKey('custom_trips.id'), nullable=True)  # Custom trip booking
+    package_id = db.Column(db.Integer, db.ForeignKey('tour_package.id'), nullable=True)
+    custom_trip_id = db.Column(db.Integer, db.ForeignKey('custom_trips.id'), nullable=True)
     members = db.Column(db.Integer, nullable=False)
+    total_amount = db.Column(db.Float, nullable=False)
+    discount_amount = db.Column(db.Float, default=0.0)
+    final_amount = db.Column(db.Float, nullable=False)
+    payment_method = db.Column(db.String(50))
+    transaction_id = db.Column(db.String(100))
+    coupon_code = db.Column(db.String(50))
+    payment_status = db.Column(db.String(20), default='Pending')  # Pending, Completed, Failed
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
     # Relationships
     user = db.relationship('User', backref='bookings', lazy=True)
     package = db.relationship('TourPackage', backref='bookings', lazy=True)
     custom_trip = db.relationship('CustomTrip', backref='bookings', lazy=True)
+
+
+    
+    # In models.py, update the Booking model's can_request_refund method
+    # In models.py, update the Booking model's can_request_refund method
+    def can_request_refund(self):
+        """Check if booking is eligible for refund (within 7 days of booking)"""
+        if self.payment_status != 'Completed':
+            return False
+        
+        # Check if within 7 days of booking creation
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        return self.created_at >= seven_days_ago
+
+    def has_pending_refund(self):
+        """Check if there's already a pending refund request for this booking"""
+        return Refund.query.filter_by(
+            booking_id=self.id, 
+            status='Pending'
+        ).first() is not None
 
 
 class CustomTrip(db.Model):
@@ -119,7 +164,6 @@ class Message(db.Model):
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
     is_read = db.Column(db.Boolean, default=False)
 
-# models.py (update AgencyRating model and add Reply model)
 
 class AgencyRating(db.Model):
     __tablename__ = 'agency_ratings'
@@ -128,7 +172,6 @@ class AgencyRating(db.Model):
     rating = db.Column(db.Integer, nullable=False)  # 1-5 stars
     feedback = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    # Removed is_approved field
     
     # Relationship
     user = db.relationship('User', backref=db.backref('agency_ratings', lazy=True))
@@ -154,4 +197,40 @@ class AgencyStats(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     total_ratings = db.Column(db.Integer, default=0)
     average_rating = db.Column(db.Float, default=0.0)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)    
+    last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  
+
+class Coupon(db.Model):
+    __tablename__ = 'coupons'
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), unique=True, nullable=False)
+    discount_percent = db.Column(db.Integer, nullable=False, default=25)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=True)
+
+    def is_valid(self):
+        if not self.is_active:
+            return False
+        if self.expires_at and self.expires_at < datetime.utcnow():
+            return False
+        return True  
+    
+
+class Refund(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    booking_id = db.Column(db.Integer, db.ForeignKey('booking.id'), nullable=True)
+    custom_trip_id = db.Column(db.Integer, db.ForeignKey('custom_trips.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # Changed 'user' to 'users'
+    amount = db.Column(db.Float, nullable=False)
+    reason = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default='Pending')  # Pending, Approved, Rejected
+    request_date = db.Column(db.DateTime, default=datetime.utcnow)
+    processed_date = db.Column(db.DateTime, nullable=True)
+    admin_notes = db.Column(db.Text, nullable=True)
+    transaction_number = db.Column(db.String(100), nullable=True)
+    
+    # Relationships
+    user = db.relationship('User', backref=db.backref('refunds', lazy=True))
+    booking = db.relationship('Booking', backref=db.backref('refunds', lazy=True))
+    custom_trip = db.relationship('CustomTrip', backref=db.backref('refunds', lazy=True))
+    

@@ -10,26 +10,81 @@ from werkzeug.utils import secure_filename
 from PIL import Image
 import os
 import secrets
-from datetime import date
+from datetime import date, timedelta
 from forms import CustomTripForm, DeleteTripForm
-from models import CustomTrip
+from models import CustomTrip , Coupon 
 from flask_socketio import SocketIO, emit, join_room, leave_room
 # app.py (at the top with other imports)
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from models import ChatSession, Message  # Add this import
 from datetime import datetime  # Make sure this is imported
 # app.py (at the top with other imports)
-from forms import RegistrationForm, LoginForm, TourPackageForm, AdminLoginForm, EditProfileForm, AgencyRatingForm, RatingReplyForm
+from forms import RegistrationForm, LoginForm, TourPackageForm, AdminLoginForm, EditProfileForm, AgencyRatingForm, RatingReplyForm , RefundRequestForm 
 from models import RatingReplyForm as RatingReplyModel 
+# Using APScheduler or similar
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, current_user, login_user, logout_user, login_required
+from datetime import datetime, timedelta
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.triggers.interval import IntervalTrigger
+import atexit
+from config import Config 
+from models import db , Refund 
 
 
-# ----------------------------
-# App Initialization
-# ----------------------------
+
 app = Flask(__name__)
 app.config.from_object(Config)
 
+login_manager = LoginManager(app)
 socketio = SocketIO(app, cors_allowed_origins="*")
+
+def cleanup_expired_bookings():
+    """Remove bookings that have been pending for more than 1 hour"""
+    with app.app_context():  # Important: use app context
+        try:
+            expiration_time = datetime.utcnow() - timedelta(hours=1)
+            expired_bookings = Booking.query.filter(
+                Booking.payment_status == 'Pending',
+                Booking.created_at < expiration_time
+            ).all()
+            
+            for booking in expired_bookings:
+                db.session.delete(booking)
+            
+            db.session.commit()
+            print(f"Cleaned up {len(expired_bookings)} expired pending bookings")
+        except Exception as e:
+            print(f"Error cleaning up expired bookings: {e}")
+
+# Initialize scheduler
+scheduler = BackgroundScheduler()
+scheduler.add_job(
+    func=cleanup_expired_bookings,
+    trigger=IntervalTrigger(hours=1),
+    id='cleanup_job',
+    name='Clean up expired bookings every 1 hour',
+    replace_existing=True
+)
+
+# Start the scheduler
+try:
+    scheduler.start()
+    print("✅ Background scheduler started for booking cleanup")
+except Exception as e:
+    print(f"❌ Error starting scheduler: {e}")
+
+# Shut down the scheduler when exiting the app
+atexit.register(lambda: scheduler.shutdown())
+
+def is_booking_expired(booking):
+    """Check if a pending booking has expired (more than 1 hour old)"""
+    if booking.payment_status != 'Pending':
+        return False
+
+    expiration_time = datetime.utcnow() - timedelta(hours=1)
+    return booking.created_at < expiration_time
 
 # Upload folder setup
 UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static/uploads')
@@ -126,6 +181,7 @@ def add_tour_package():
 @app.route('/user-dashboard')
 @login_required
 def user_dashboard():
+    cleanup_expired_bookings()
     if current_user.is_admin:
         flash("Redirected to admin dashboard.", "info")
         return redirect(url_for('dashboard'))
@@ -133,6 +189,7 @@ def user_dashboard():
 
 @app.route('/tour-packages')
 def tour_packages():
+    cleanup_expired_bookings()
     destination = request.args.get('destination')
     price_range = request.args.get('price')
     duration = request.args.get('duration')
@@ -150,6 +207,7 @@ def tour_packages():
 @app.route("/book_package/<int:package_id>", methods=["POST"])
 @login_required
 def book_package(package_id):
+    cleanup_expired_bookings()
     data = request.get_json()
     members_requested = int(data.get("members", 0))
 
@@ -158,17 +216,48 @@ def book_package(package_id):
     if members_requested > package.available_slots:
         return jsonify({"success": False, "message": f"Not enough slots! Only {package.available_slots} left."}), 400
 
-    # Add booking
-    booking = Booking(user_id=current_user.id, package_id=package.id, members=members_requested)
-    db.session.add(booking)
+    # Calculate total amount
+    total_amount = package.price * members_requested
 
-    # Update booked_members count
-    package.booked_members += members_requested
+    # Create booking with PENDING status (don't update booked_members yet)
+    booking = Booking(
+        user_id=current_user.id, 
+        package_id=package.id, 
+        members=members_requested,
+        total_amount=total_amount,
+        final_amount=total_amount,
+        payment_status='Pending'  # Set as pending until payment
+    )
+    db.session.add(booking)
     db.session.commit()
 
-    return jsonify({"success": True, "remaining_slots": package.available_slots})
+    return jsonify({
+        "success": True, 
+        "booking_id": booking.id,
+        "redirect_url": url_for('payment_page', booking_id=booking.id)
+    })
+
+@app.route('/my-booked-packages')
+@login_required
+def my_booked_packages():
+    # Get all completed package bookings for the current user
+    bookings = Booking.query.filter_by(
+        user_id=current_user.id, 
+        payment_status='Completed'
+    ).filter(Booking.package_id.isnot(None)).order_by(Booking.created_at.desc()).all()
+    
+    return render_template('my_booked_packages.html', bookings=bookings)
+
+# Update the Booking model to add refund-related methods
+# Add these methods to your Booking class in models.py
 
 
+def has_pending_refund(self):
+    """Check if there's already a pending refund request for this booking"""
+    return Refund.query.filter_by(
+        booking_id=self.id, 
+        status='Pending'
+    ).first() is not None
 
 @app.route('/logout')
 @login_required
@@ -821,7 +910,20 @@ def edit_custom_trip(trip_id):
         trip.destination = request.form.get('destination', trip.destination)
         trip.transport = request.form.get('transport', trip.transport)
         trip.hotel = request.form.get('hotel', trip.hotel)
-        trip.number_of_rooms = int(request.form.get('number_of_rooms', trip.number_of_rooms))
+        number_of_rooms_input = request.form.get('number_of_rooms')
+
+        if number_of_rooms_input is not None and number_of_rooms_input.strip() != '':
+            try:
+                trip.number_of_rooms = int(number_of_rooms_input)
+                # Optional: Add minimum value validation
+                if trip.number_of_rooms < 1:
+                    trip.number_of_rooms = 1
+            except ValueError:
+                # Keep the existing value if conversion fails
+                trip.number_of_rooms = trip.number_of_rooms
+        else:
+            # If no input provided, keep the existing value
+            trip.number_of_rooms = trip.number_of_rooms
         trip.room_type = request.form.get('room_type', trip.room_type)
         trip.start_date = request.form.get('start_date', trip.start_date)
         trip.end_date = request.form.get('end_date', trip.end_date)
@@ -839,6 +941,7 @@ def edit_custom_trip(trip_id):
 
     return render_template('custom_trip_form.html', trip=trip)
 
+
 @app.route('/confirm-custom-trip/<int:trip_id>', methods=['POST'])
 @login_required
 def confirm_custom_trip(trip_id):
@@ -847,23 +950,25 @@ def confirm_custom_trip(trip_id):
         flash("You cannot confirm this trip.", "danger")
         return redirect(url_for('my_custom_trips'))
 
-    # Create booking with custom_trip_id
+    # Calculate total amount
+    total_amount = trip.price * trip.people
+
+    # Create booking
     booking = Booking(
         user_id=current_user.id,
-        package_id=None,   # Not a standard package
-        custom_trip_id=trip.id,  # Link to custom trip
-        members=trip.people
+        package_id=None,
+        custom_trip_id=trip.id,
+        members=trip.people,
+        total_amount=total_amount,
+        final_amount=total_amount
     )
     db.session.add(booking)
 
-    # Optionally mark trip as "Confirmed"
+    # Mark trip as "Confirmed"
     trip.status = "Confirmed"
-
     db.session.commit()
 
-    flash("Your custom trip has been confirmed and booked!", "success")
-    return redirect(url_for('my_custom_trips'))
-
+    return redirect(url_for('payment_page', booking_id=booking.id))
 
 # Delete Trip
 @app.route('/delete-custom-trip/<int:trip_id>')
@@ -878,6 +983,201 @@ def delete_custom_trip(trip_id):
     db.session.commit()
     flash("Trip deleted successfully!", "success")
     return redirect(url_for('my_custom_trips'))
+
+
+@app.route('/request-refund/<int:booking_id>', methods=['POST'])
+@login_required
+def request_refund(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # Verify ownership
+    if booking.user_id != current_user.id:
+        flash("Access denied.", "danger")
+        return redirect(url_for('user_dashboard'))
+    
+    # Check if eligible for refund
+    if not booking.can_request_refund():
+        flash("Refund cannot be requested. 7 days have passed since your booking.", "warning")
+        if booking.package_id:
+            return redirect(url_for('my_booked_packages'))
+        else:
+            return redirect(url_for('my_custom_trips'))
+    
+    # Check if already has pending refund
+    if booking.has_pending_refund():
+        flash("You already have a pending refund request for this booking.", "warning")
+        if booking.package_id:
+            return redirect(url_for('my_booked_packages'))
+        else:
+            return redirect(url_for('my_custom_trips'))
+    
+    reason = request.form.get('reason')
+    
+    # Create refund request
+    refund = Refund(
+        booking_id=booking.id,
+        custom_trip_id=booking.custom_trip_id,
+        user_id=current_user.id,
+        amount=booking.final_amount,
+        reason=reason
+    )
+    db.session.add(refund)
+    db.session.commit()
+    
+    flash("Refund request submitted successfully! Admin will review your request.", "success")
+    
+    if booking.package_id:
+        return redirect(url_for('my_booked_packages'))
+    else:
+        return redirect(url_for('my_custom_trips'))
+        
+@app.route('/admin/refunds')
+@login_required
+def admin_refunds():
+    if not current_user.is_admin:
+        flash("Access Denied: Admins only!", "danger")
+        return redirect(url_for('home'))
+    
+    refunds = Refund.query.options(
+        db.joinedload(Refund.user),
+        db.joinedload(Refund.custom_trip),
+        db.joinedload(Refund.booking).joinedload(Booking.package),
+        db.joinedload(Refund.booking).joinedload(Booking.custom_trip)
+    ).order_by(Refund.request_date.desc()).all()
+    
+    return render_template('admin_refunds.html', refunds=refunds)
+
+# In app.py, update the process_refund route
+@app.route('/admin/refund/action/<int:refund_id>', methods=['POST'])
+@login_required
+def process_refund(refund_id):
+    if not current_user.is_admin:
+        flash("Access Denied: Admins only!", "danger")
+        return redirect(url_for('home'))
+    
+    refund = Refund.query.get_or_404(refund_id)
+    action = request.form.get('action')
+    admin_notes = request.form.get('admin_notes', '')
+    transaction_number = request.form.get('transaction_number', '')  # Get transaction number
+    
+    # Check if refund is still within 7 days
+    booking = refund.booking
+    if booking and not booking.can_request_refund():
+        flash("Cannot process refund: 7 days have passed since the booking.", "danger")
+        return redirect(url_for('admin_refunds'))
+    
+    if action == 'approve':
+        refund.status = 'Approved'
+        refund.processed_date = datetime.utcnow()
+        refund.admin_notes = admin_notes
+        refund.transaction_number = transaction_number  # Save transaction number
+        
+        # Here you would integrate with your payment gateway for actual refund
+        # For now, we'll just mark it as approved
+        flash("Refund approved successfully!", "success")
+        
+    elif action == 'reject':
+        refund.status = 'Rejected'
+        refund.processed_date = datetime.utcnow()
+        refund.admin_notes = admin_notes
+        flash("Refund request rejected.", "info")
+    
+    db.session.commit()
+    return redirect(url_for('admin_refunds'))
+
+# You can call this periodically or before showing available slots
+
+@app.route('/payment/<int:booking_id>')
+@login_required
+def payment_page(booking_id):
+    # Clean up expired bookings first
+    cleanup_expired_bookings()
+    
+    booking = Booking.query.get_or_404(booking_id)
+    
+    # Check if booking has expired
+    if booking.payment_status == 'Pending' and is_booking_expired(booking):
+        db.session.delete(booking)
+        db.session.commit()
+        flash("Your booking session has expired. Please book again.", "warning")
+        return redirect(url_for('tour_packages'))
+    
+    # Calculate time remaining
+    expiration_time = booking.created_at + timedelta(hours=1)
+    time_remaining = expiration_time - datetime.utcnow()
+    minutes_remaining = max(0, int(time_remaining.total_seconds() / 60))
+    
+    return render_template('payment.html', 
+                         booking=booking,
+                         minutes_remaining=minutes_remaining)
+@app.route('/apply-coupon', methods=['POST'])
+@login_required
+def apply_coupon():
+    data = request.get_json()
+    coupon_code = data.get('coupon_code')
+    booking_id = data.get('booking_id')
+    
+    booking = Booking.query.get_or_404(booking_id)
+    coupon = Coupon.query.filter_by(code=coupon_code).first()
+    
+    if not coupon or not coupon.is_valid():
+        return jsonify({
+            'success': False,
+            'message': 'Invalid or expired coupon code'
+        })
+    
+    # Calculate discount
+    discount_amount = (booking.total_amount * coupon.discount_percent) / 100
+    final_amount = booking.total_amount - discount_amount
+    
+    return jsonify({
+        'success': True,
+        'discount_percent': coupon.discount_percent,
+        'discount_amount': discount_amount,
+        'final_amount': final_amount,
+        'message': f'{coupon.discount_percent}% discount applied successfully!'
+    })
+@app.route('/process-payment/<int:booking_id>', methods=['POST'])
+@login_required
+def process_payment(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+    
+    if booking.user_id != current_user.id:
+        flash("Access denied.", "danger")
+        return redirect(url_for('user_dashboard'))
+    
+    payment_method = request.form.get('payment_method')
+    transaction_id = request.form.get('transaction_id')
+    coupon_code = request.form.get('coupon_code')
+    
+    # Validate payment method
+    valid_methods = ['bkash', 'nagad', 'rocket', 'bank_transfer', 'card']
+    if payment_method not in valid_methods:
+        flash("Invalid payment method.", "danger")
+        return redirect(url_for('payment_page', booking_id=booking_id))
+    
+    # Apply coupon if provided
+    if coupon_code:
+        coupon = Coupon.query.filter_by(code=coupon_code).first()
+        if coupon and coupon.is_valid():
+            booking.discount_amount = (booking.total_amount * coupon.discount_percent) / 100
+            booking.final_amount = booking.total_amount - booking.discount_amount
+            booking.coupon_code = coupon_code
+    
+    # Update payment details
+    booking.payment_method = payment_method
+    booking.transaction_id = transaction_id
+    booking.payment_status = 'Completed'
+    
+    # ✅ ONLY update package slots if it's a standard package booking
+    if booking.package:  # This checks if package is not None
+        package = booking.package
+        package.booked_members += booking.members
+    
+    db.session.commit()
+    
+    flash("Payment completed successfully! Your booking is confirmed.", "success")
+    return redirect(url_for('user_dashboard'))
 
 # app.py (Socket.IO Handlers)
 

@@ -114,3 +114,7 @@ class AgencyRatingForm(FlaskForm):
 class RatingReplyForm(FlaskForm):
     reply_text = TextAreaField('Your Reply', validators=[DataRequired(), Length(max=500)])
     submit = SubmitField('Post Reply')
+
+class RefundRequestForm(FlaskForm):
+    reason = TextAreaField('Reason for Refund', validators=[DataRequired(), Length(max=500)])
+    submit = SubmitField('Request Refund')

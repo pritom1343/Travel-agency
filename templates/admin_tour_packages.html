@@ -1,65 +1,205 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<!-- Top buttons: Add Package (left) and Admin Dashboard (right) -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <a href="{{ url_for('add_tour_package') }}" class="btn btn-success">
-        Add Package
-    </a>
-    <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
-        Admin Dashboard
-    </a>
+<style>
+    .packages-container {
+        padding: 25px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 12px;
+        color: white;
+    }
+
+    .page-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .header-buttons {
+        display: flex;
+        gap: 15px;
+    }
+
+    .btn {
+        border: none;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        color: white;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, #10b981, #059669);
+        box-shadow: 0 4px 8px rgba(16, 185, 129, 0.3);
+    }
+    .btn-success:hover { transform: translateY(-2px); }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+    .btn-primary:hover { transform: translateY(-2px); }
+
+    .packages-table {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        margin-bottom: 30px;
+        width: 100%;
+    }
+
+    .table-header {
+        background: linear-gradient(135deg, #2c3e50, #4a5568);
+        color: white;
+    }
+
+    .table-header th {
+        padding: 16px 12px;
+        font-weight: 600;
+        text-align: center;
+        border: none;
+    }
+
+    .table-body td {
+        padding: 14px 12px;
+        text-align: center;
+        border-color: #edf2f7;
+    }
+
+    .table-body tr:nth-child(even) { background: #f8fafc; }
+    .table-body tr:hover { background: #f1f5f9; }
+
+    .package-image {
+        width: 80px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    /* Action buttons */
+    .action-buttons {
+        display: flex;
+        gap: 6px;
+        justify-content: center;
+    }
+    .btn-action {
+        padding: 6px 12px;
+        border-radius: 5px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    .btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .btn-danger:hover { background: linear-gradient(135deg, #dc2626, #b91c1c); }
+
+    .btn-edit { background: linear-gradient(135deg, #10b981, #059669); }
+    .btn-edit:hover { background: linear-gradient(135deg, #059669, #047857); }
+
+    .btn-info { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+    .btn-info:hover { background: linear-gradient(135deg, #0284c7, #0369a1); }
+
+    /* Availability badge */
+    .availability-badge {
+        padding: 6px 10px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: white;
+    }
+    .available { background: linear-gradient(135deg, #10b981, #059669); }
+    .limited { background: linear-gradient(135deg, #f59e0b, #d97706); }
+    .full { background: linear-gradient(135deg, #ef4444, #dc2626); }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .header-section { flex-direction: column; gap: 15px; text-align: center; }
+        .header-buttons { justify-content: center; }
+    }
+</style>
+
+<div class="packages-container">
+    <!-- Header Section -->
+    <div class="header-section">
+        <h1 class="page-title">Manage Tour Packages</h1>
+        <div class="header-buttons">
+            <a href="{{ url_for('add_tour_package') }}" class="btn btn-success">➕ Add Package</a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-primary">📊 Admin Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Packages Table -->
+    <table class="table table-hover packages-table">
+        <thead class="table-header">
+            <tr>
+                <th>Image</th>
+                <th>Title</th>
+                <th>Location</th>
+                <th>Price</th>
+                <th>Duration</th>
+                <th>Max Members</th>
+                <th>Booked Members</th>
+                <th>Available Slots</th>
+                <th>Tour Type</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody class="table-body">
+            {% for package in packages %}
+            <tr>
+                <td>
+                    {% if package.image_filename %}
+                        <img src="{{ url_for('static', filename='uploads/' ~ package.image_filename) }}" class="package-image" alt="{{ package.title }}">
+                    {% else %}
+                        <span class="text-muted">N/A</span>
+                    {% endif %}
+                </td>
+                <td><strong>{{ package.title }}</strong></td>
+                <td>{{ package.location }}</td>
+                <td>${{ package.price }}</td>
+                <td>{{ package.duration }}</td>
+                <td>{{ package.members }}</td>
+                <td>{{ package.booked_members }}</td>
+                <td>
+                    {% if package.available_slots > 5 %}
+                        <span class="availability-badge available">{{ package.available_slots }}</span>
+                    {% elif package.available_slots > 0 %}
+                        <span class="availability-badge limited">{{ package.available_slots }}</span>
+                    {% else %}
+                        <span class="availability-badge full">Full</span>
+                    {% endif %}
+                </td>
+                <td>{{ package.tour_type }}</td>
+                <td>
+                    <div class="action-buttons">
+                        <form action="{{ url_for('delete_tour_package', package_id=package.id) }}" method="POST" style="display:inline;">
+                            <button type="submit" class="btn-action btn-danger" onclick="return confirm('Are you sure you want to delete this package?')">Delete</button>
+                        </form>
+                        <a href="{{ url_for('edit_tour_package', package_id=package.id) }}" class="btn-action btn-edit">Edit</a>
+                        <a href="{{ url_for('tour_package_details', package_id=package.id) }}" class="btn-action btn-info">Details</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
-
-<h2 class="mb-4">Manage Tour Packages</h2>
-
-<table class="table table-bordered table-hover">
-    <thead class="table-dark">
-        <tr>
-            <th>Image</th>
-            <th>Title</th>
-            <th>Location</th>
-            <th>Price</th>
-            <th>Duration</th>
-            <th>Max Members</th>
-            <th>Booked Members</th>
-            <th>Available Slots</th>
-            <th>Tour Type</th>
-            <th>Actions</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for package in packages %}
-        <tr>
-            <td>
-                {% if package.image_filename %}
-                    <img src="{{ url_for('static', filename='uploads/' ~ package.image_filename) }}" width="100">
-                {% else %}
-                    N/A
-                {% endif %}
-            </td>
-            <td>{{ package.title }}</td>
-            <td>{{ package.location }}</td>
-            <td>${{ package.price }}</td>
-            <td>{{ package.duration }}</td>
-            <td>{{ package.members }}</td>
-            <td>{{ package.booked_members }}</td>
-            <td>{{ package.available_slots }}</td>
-            <td>{{ package.tour_type }}</td>
-            <td class="d-flex gap-1">
-                <!-- Delete button (red) -->
-                <form action="{{ url_for('delete_tour_package', package_id=package.id) }}" method="POST" style="display:inline-block;">
-                    <button type="submit" class="btn btn-sm" style="background-color: #dc3545; color: white;">Delete</button>
-                </form>
-
-                <!-- Edit button (green) -->
-                <a href="{{ url_for('edit_tour_package', package_id=package.id) }}" class="btn btn-sm" style="background-color: #28a745; color: white;">Edit</a>
-
-                <!-- Details button (blue) -->
-                <a href="{{ url_for('tour_package_details', package_id=package.id) }}" class="btn btn-sm" style="background-color: #007bff; color: white;">Details</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
 {% endblock %}

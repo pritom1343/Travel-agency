@@ -1,73 +1,165 @@
-{% extends "base.html" %} 
+{% extends "base.html" %}
 {% block content %}
-<div class="container mt-4">
-    <h1>Manage Custom Trips</h1>
+<style>
+    .custom-trips-container {
+        padding: 25px;
+        max-width: 1800px;
+        margin: auto;
+    }
 
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>User</th>
-                <th>Destination</th>
-                <th>Transport</th>
-                <th>Hotel</th>
-                <th>Rooms</th>
-                <th>Room Type</th>
-                <th>People</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Other Preferences</th>
-                <th>User Notes</th>
-                <th>Status</th>
-                <th>Price</th>
-                <th>Admin Notes</th>
-                <th>Resubmitted?</th>
-                <th>Action</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for trip in trips %}
-            <tr>
-                <td>{{ trip.user.username }} ({{ trip.user.email }})</td>
-                <td>{{ trip.destination }}</td>
-                <td>{{ trip.transport }}</td>
-                <td>{{ trip.hotel }}</td>
-                <td>{{ trip.number_of_rooms if trip.number_of_rooms > 0 else "No Rooms" }}</td>
-                <td>{{ trip.room_type if trip.number_of_rooms > 0 else "-" }}</td>
-                <td>{{ trip.people }}</td>
-                <td>{{ trip.start_date }}</td>
-                <td>{{ trip.end_date }}</td>
-                <td>{{ trip.other_preferences or "-" }}</td>
-                <td>{{ trip.notes or "-" }}</td>
-                <td>
-                    {% if trip.status == "Pending" %}
-                        <span class="badge bg-warning">{{ trip.status }}</span>
-                    {% elif trip.status == "Approved" %}
-                        <span class="badge bg-success">{{ trip.status }}</span>
-                    {% elif trip.status == "Rejected" %}
-                        <span class="badge bg-danger">{{ trip.status }}</span>
-                    {% endif %}
-                </td>
-                <td>{{ trip.price if trip.price else "Not set" }}</td>
-                <td>{{ trip.admin_notes if trip.admin_notes else "-" }}</td>
-                <td>
-                    {% if trip.resubmit_flag %}
-                        <span class="badge bg-info">Yes</span>
-                    {% else %}
-                        No
-                    {% endif %}
-                </td>
-                <td>
-                    <form method="POST" action="{{ url_for('update_custom_trip', trip_id=trip.id) }}">
-                        <input type="number" step="0.01" name="price" placeholder="Price" class="form-control mb-1" value="{{ trip.price or '' }}">
-                        <textarea name="admin_notes" class="form-control mb-1" placeholder="Admin Notes">{{ trip.admin_notes or '' }}</textarea>
-                        <button name="action" value="approve" class="btn btn-success btn-sm mb-1">Approve</button>
-                        <button name="action" value="reject" class="btn btn-danger btn-sm">Reject</button>
-                        
-                    </form>
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    /* Header */
+    .page-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding: 20px;
+        border-radius: 12px;
+        color: white;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    .page-title { font-size: 2.3rem; font-weight: 700; margin: 0; }
+
+    /* Table */
+    .trips-table {
+        width: 100%;
+        border-radius: 12px;
+        overflow: hidden;
+        background: white;
+        box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    }
+    .trips-table th, .trips-table td {
+        padding: 14px 12px;
+        font-size: 0.9rem;
+        text-align: center;
+        vertical-align: middle;
+    }
+    .trips-table th { 
+        background: linear-gradient(135deg, #2c3e50, #4a5568); 
+        color: white; 
+        font-weight: 600; 
+    }
+    .trips-table tbody tr:nth-child(even) { background: #f9fafb; }
+    .trips-table tbody tr:hover { background: #f1f5f9; }
+
+    /* Badges */
+    .badge {
+        padding: 6px 10px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    .bg-warning { background: #f59e0b; color: white; }
+    .bg-success { background: #10b981; color: white; }
+    .bg-danger  { background: #ef4444; color: white; }
+    .bg-info    { background: #0ea5e9; color: white; }
+
+    /* Forms */
+    .action-form { display: flex; flex-direction: column; gap: 8px; }
+    .action-input {
+        padding: 8px;
+        font-size: 0.85rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        resize: vertical;
+    }
+    .action-input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 2px rgba(102,126,234,0.2);
+        outline: none;
+    }
+    .action-buttons { display: flex; gap: 6px; }
+    .btn {
+        border: none;
+        padding: 6px 12px;
+        border-radius: 5px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        transition: transform 0.15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-success { background: #10b981; color: white; }
+    .btn-success:hover { background: #059669; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-danger:hover { background: #dc2626; }
+
+    /* Responsive */
+    .scroll-container { overflow-x: auto; }
+    @media (max-width: 992px) {
+        .page-title { font-size: 1.8rem; }
+        .trips-table th, .trips-table td { font-size: 0.8rem; padding: 10px 6px; }
+    }
+</style>
+
+<div class="custom-trips-container">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">Manage Custom Trips</h1>
+    </div>
+
+    <!-- Scrollable Table -->
+    <div class="scroll-container">
+        <table class="table trips-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Destination</th>
+                    <th>Transport</th>
+                    <th>Hotel</th>
+                    <th>Rooms</th>
+                    <th>Room Type</th>
+                    <th>People</th>
+                    <th>Start</th>
+                    <th>End</th>
+                    <th>Preferences</th>
+                    <th>User Notes</th>
+                    <th>Status</th>
+                    <th>Price</th>
+                    <th>Admin Notes</th>
+                    <th>Resubmitted?</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for trip in trips %}
+                <tr>
+                    <td><strong>{{ trip.user.username }}</strong><br><small class="text-muted">{{ trip.user.email }}</small></td>
+                    <td>{{ trip.destination }}</td>
+                    <td>{{ trip.transport }}</td>
+                    <td>{{ trip.hotel }}</td>
+                    <td>{{ trip.number_of_rooms or "-" }}</td>
+                    <td>{{ trip.room_type if trip.number_of_rooms else "-" }}</td>
+                    <td>{{ trip.people }}</td>
+                    <td>{{ trip.start_date }}</td>
+                    <td>{{ trip.end_date }}</td>
+                    <td>{{ trip.other_preferences or "-" }}</td>
+                    <td>{{ trip.notes or "-" }}</td>
+                    <td>
+                        {% if trip.status == "Pending" %}
+                            <span class="badge bg-warning">{{ trip.status }}</span>
+                        {% elif trip.status == "Approved" %}
+                            <span class="badge bg-success">{{ trip.status }}</span>
+                        {% else %}
+                            <span class="badge bg-danger">{{ trip.status }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ trip.price or "Not set" }}</td>
+                    <td>{{ trip.admin_notes or "-" }}</td>
+                    <td>{% if trip.resubmit_flag %}<span class="badge bg-info">Yes</span>{% else %}No{% endif %}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('update_custom_trip', trip_id=trip.id) }}" class="action-form">
+                            <input type="number" step="0.01" name="price" placeholder="Set Price" class="action-input" value="{{ trip.price or '' }}">
+                            <textarea name="admin_notes" class="action-input" placeholder="Admin Notes" rows="2">{{ trip.admin_notes or '' }}</textarea>
+                            <div class="action-buttons">
+                                <button name="action" value="approve" class="btn btn-success">Approve</button>
+                                <button name="action" value="reject" class="btn btn-danger">Reject</button>
+                            </div>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
 </div>
 {% endblock %}

@@ -1081,6 +1081,16 @@ body, html {
     border-left: 3px solid #6c757d;
 }
 
+/* Add to the existing style section in my_custom_trips.html */
+.refund-approved {
+  text-align: center;
+}
+
+.refund-details {
+  font-size: 12px;
+  margin-top: 5px;
+  color: #555;
+}
 /* Navbar Styles */
 .navbar {
     background-color: #343a40;
